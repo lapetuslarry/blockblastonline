@@ -2,7 +2,12 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Block Puzzle Drag Smooth</title>
+    <title>Block Blast Online - Chơi game xếp hình miễn phí</title>
+
+    <!-- SEO -->
+    <meta name="description" content="Chơi Block Blast online miễn phí. Game xếp hình gây nghiện, chơi trực tiếp trên web không cần tải.">
+    <meta name="keywords" content="block blast, game xếp hình, game online, chơi game miễn phí">
+
     <style>
         body {
             font-family: Arial;
@@ -29,26 +34,58 @@
             border-radius: 6px;
             cursor: pointer;
         }
+
+        .gameover {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1>Block Puzzle</h1>
+
+    <h1>Block Blast Online</h1>
     <div>Score: <span id="score">0</span></div>
+
     <canvas id="game" width="300" height="300"></canvas>
+
     <div class="pieces">
         <canvas class="pieceCanvas" width="90" height="90" id="p0"></canvas>
         <canvas class="pieceCanvas" width="90" height="90" id="p1"></canvas>
         <canvas class="pieceCanvas" width="90" height="90" id="p2"></canvas>
     </div>
 
+    <div class="gameover" id="gameover">
+        <h2>Game Over</h2>
+        <p>Score: <span id="finalScore"></span></p>
+        <button onclick="init()">Chơi lại</button>
+    </div>
+
+    <!-- SEO content -->
+    <p>
+        Chơi Block Blast online miễn phí. Đây là game xếp hình gây nghiện, giúp bạn giải trí và thử thách tư duy logic.
+    </p>
+
     <script>
         const gridSize = 10, cell = 30;
         const canvas = document.getElementById('game');
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
+        const gameoverUI = document.getElementById('gameover');
+        const finalScore = document.getElementById('finalScore');
 
         let grid, score, pieces;
-        let dragging = null; // {shape, offsetX, offsetY}
+        let dragging = null;
 
         const SHAPES = [[[1]], [[1, 1]], [[1], [1]], [[1, 1, 1]], [[1], [1], [1]], [[1, 1], [1, 1]], [[1, 0], [1, 1]], [[0, 1], [1, 1]]];
 
@@ -58,6 +95,7 @@
             grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(0));
             score = 0; scoreEl.textContent = score;
             pieces = [randShape(), randShape(), randShape()];
+            gameoverUI.style.display = 'none';
             draw(); drawPieces();
         }
 
@@ -74,16 +112,13 @@
                 }
             }
 
-            // preview
             if (dragging) {
                 const { shape, gx, gy } = dragging;
                 for (let y = 0; y < shape.length; y++) {
                     for (let x = 0; x < shape[0].length; x++) {
                         if (shape[y][x]) {
-                            let px = (gx + x) * cell;
-                            let py = (gy + y) * cell;
                             ctx.fillStyle = 'rgba(76,175,80,0.5)';
-                            ctx.fillRect(px, py, cell, cell);
+                            ctx.fillRect((gx + x) * cell, (gy + y) * cell, cell, cell);
                         }
                     }
                 }
@@ -143,15 +178,12 @@
             if (cleared) { score += cleared * 10; scoreEl.textContent = score; }
         }
 
-        // DRAG START
         for (let i = 0; i < 3; i++) {
-            const el = document.getElementById('p' + i);
-            el.addEventListener('mousedown', () => {
+            document.getElementById('p' + i).addEventListener('mousedown', () => {
                 dragging = { shape: pieces[i], index: i, gx: 0, gy: 0 };
             });
         }
 
-        // DRAG MOVE
         canvas.addEventListener('mousemove', (e) => {
             if (!dragging) return;
             const rect = canvas.getBoundingClientRect();
@@ -160,7 +192,6 @@
             draw();
         });
 
-        // DROP
         canvas.addEventListener('mouseup', () => {
             if (!dragging) return;
             if (canPlace(dragging.shape, dragging.gx, dragging.gy)) {
@@ -181,8 +212,8 @@
                     }
                 }
             }
-            alert('Game Over! Score: ' + score);
-            init();
+            finalScore.textContent = score;
+            gameoverUI.style.display = 'block';
         }
 
         init();
