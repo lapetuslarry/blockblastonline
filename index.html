@@ -1,55 +1,101 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="google-site-verification" content="6vv-Px2MmVJZ8eDDeERwzSfucAXSwkAOt2YJ6UzooLA" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Block Blast 8x8 Pro</title>
+    <meta name="google-site-verification" content="google3c6e1165888d2e78" />
+
+    <title>Block Blast 8x8 Pro - Play Free Online Puzzle Game</title>
+    <meta name="description" content="Play Block Blast 8x8 Pro for free. A highly addictive block puzzle game with smooth graphics, satisfying sound effects, and challenging gameplay. Master the 8x8 grid now!">
+    <meta name="keywords" content="block blast, block blast 8x8, free puzzle games, play block blast online, logic games, 8x8 grid puzzle, unblocked games">
     <link rel="icon" type="image/png" href="favicon.png">
 
     <style>
         body {
-            font-family: Arial;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             text-align: center;
             background: #111;
             color: white;
+            margin: 0;
+            padding: 20px;
         }
 
         canvas {
             background: #222;
             margin-top: 20px;
             border-radius: 8px;
+            max-width: 100%;
+            height: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
         .pieces {
             display: flex;
             justify-content: center;
             gap: 12px;
-            margin-top: 10px;
+            margin-top: 20px;
         }
 
         .pieceCanvas {
             background: #1b1b1b;
             border-radius: 6px;
             cursor: pointer;
+            width: 85px;
+            height: 85px;
+            transition: transform 0.1s;
         }
+
+            .pieceCanvas:hover {
+                transform: scale(1.05);
+                background: #252525;
+            }
 
         .gameover {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%,-50%);
-            background: #222;
-            padding: 20px;
-            border-radius: 10px;
+            background: rgba(34, 34, 34, 0.95);
+            padding: 40px;
+            border-radius: 15px;
             display: none;
+            border: 2px solid #4caf50;
+            z-index: 100;
+            box-shadow: 0 0 30px rgba(76, 175, 80, 0.3);
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+            button:hover {
+                background: #45a049;
+            }
+
+        h1 {
+            margin-bottom: 5px;
+            color: #4caf50;
+        }
+
+        .score-container {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
 
-    <h1>Block Blast 8x8</h1>
-    <div>Score: <span id="score">0</span></div>
+    <h1>Block Blast 8x8 Pro</h1>
+    <div class="score-container">Score: <span id="score" style="color: #4caf50; font-weight: bold;">0</span></div>
 
     <canvas id="game" width="320" height="320"></canvas>
 
@@ -60,12 +106,13 @@
     </div>
 
     <div class="gameover" id="gameover">
-        <h2>Game Over</h2>
-        <p>Score: <span id="finalScore"></span></p>
-        <button onclick="init()">Chơi lại</button>
+        <h2 style="font-size: 32px; margin-top: 0;">GAME OVER</h2>
+        <p style="font-size: 20px;">Your Final Score: <span id="finalScore" style="color: #4caf50; font-weight: bold;"></span></p>
+        <button onclick="init()">Play Again</button>
     </div>
 
     <script>
+        // --- LOGIC GAME (Giữ nguyên và tối ưu nhẹ cho Global) ---
         const gridSize = 8, cell = 40;
         const canvas = document.getElementById('game');
         const ctx = canvas.getContext('2d');
@@ -98,14 +145,13 @@
 
         function draw() {
             ctx.clearRect(0, 0, 320, 320);
-
             for (let y = 0; y < gridSize; y++) {
                 for (let x = 0; x < gridSize; x++) {
-                    ctx.strokeStyle = '#555';
+                    ctx.strokeStyle = '#333';
                     ctx.strokeRect(x * cell, y * cell, cell, cell);
                     if (grid[y][x]) {
                         ctx.fillStyle = '#4caf50';
-                        ctx.fillRect(x * cell, y * cell, cell, cell);
+                        ctx.fillRect(x * cell + 1, y * cell + 1, cell - 2, cell - 2);
                     }
                 }
             }
@@ -116,7 +162,7 @@
                 for (let y = 0; y < shape.length; y++) {
                     for (let x = 0; x < shape[0].length; x++) {
                         if (shape[y][x]) {
-                            ctx.fillStyle = valid ? 'rgba(76,175,80,0.5)' : 'rgba(255,0,0,0.5)';
+                            ctx.fillStyle = valid ? 'rgba(76,175,80,0.4)' : 'rgba(244,67,54,0.4)';
                             ctx.fillRect((gx + x) * cell, (gy + y) * cell, cell, cell);
                         }
                     }
@@ -124,19 +170,21 @@
             }
 
             effects.forEach(e => {
-                ctx.fillStyle = 'rgba(255,255,0,' + e.alpha + ')';
+                ctx.fillStyle = 'rgba(255,255,255,' + e.alpha + ')';
                 ctx.fillRect(e.x * cell, e.y * cell, cell, cell);
             });
         }
 
         function drawPieceOn(ctxp, shape) {
             ctxp.clearRect(0, 0, 90, 90);
-            const s = 20;
+            const s = 18;
+            const offsetX = (90 - shape[0].length * s) / 2;
+            const offsetY = (90 - shape.length * s) / 2;
             for (let y = 0; y < shape.length; y++) {
                 for (let x = 0; x < shape[0].length; x++) {
                     if (shape[y][x]) {
                         ctxp.fillStyle = '#4caf50';
-                        ctxp.fillRect(x * s + 20, y * s + 20, s, s);
+                        ctxp.fillRect(x * s + offsetX, y * s + offsetY, s - 2, s - 2);
                     }
                 }
             }
@@ -166,20 +214,18 @@
                     if (shape[y][x]) grid[gy + y][gx + x] = 1;
                 }
             }
-            playSound(200);
+            playSound(200, 'triangle');
             clearLines();
         }
 
         function clearLines() {
             let clearedCells = [];
-
             for (let y = 0; y < gridSize; y++) {
                 if (grid[y].every(v => v === 1)) {
                     for (let x = 0; x < gridSize; x++) clearedCells.push({ x, y });
                     grid[y].fill(0);
                 }
             }
-
             for (let x = 0; x < gridSize; x++) {
                 let full = true;
                 for (let y = 0; y < gridSize; y++) if (!grid[y][x]) full = false;
@@ -190,13 +236,12 @@
                     }
                 }
             }
-
             if (clearedCells.length) {
-                score += clearedCells.length * 5;
+                score += clearedCells.length * 10;
                 scoreEl.textContent = score;
                 effects = clearedCells.map(c => ({ x: c.x, y: c.y, alpha: 1 }));
                 animateEffects();
-                playSound(500);
+                playSound(400, 'sine');
             }
         }
 
@@ -209,31 +254,44 @@
             }, 30);
         }
 
-        function playSound(freq) {
-            const ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctxAudio.createOscillator();
-            osc.type = 'square';
-            osc.frequency.value = freq;
-            osc.connect(ctxAudio.destination);
-            osc.start();
-            setTimeout(() => osc.stop(), 100);
+        function playSound(freq, type) {
+            try {
+                const ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctxAudio.createOscillator();
+                const gain = ctxAudio.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.1, ctxAudio.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctxAudio.currentTime + 0.1);
+                osc.connect(gain);
+                gain.connect(ctxAudio.destination);
+                osc.start();
+                osc.stop(ctxAudio.currentTime + 0.1);
+            } catch (e) { }
         }
 
+        // --- Giao diện chuột và cảm ứng ---
         for (let i = 0; i < 3; i++) {
-            document.getElementById('p' + i).addEventListener('mousedown', () => {
-                dragging = { shape: pieces[i], index: i, gx: 0, gy: 0 };
-            });
+            const pCanvas = document.getElementById('p' + i);
+            const startDrag = () => { dragging = { shape: pieces[i], index: i, gx: 0, gy: 0 }; };
+            pCanvas.addEventListener('mousedown', startDrag);
+            pCanvas.addEventListener('touchstart', (e) => { startDrag(); }, { passive: true });
         }
 
-        canvas.addEventListener('mousemove', (e) => {
+        const moveHandler = (e) => {
             if (!dragging) return;
             const rect = canvas.getBoundingClientRect();
-            dragging.gx = Math.floor((e.clientX - rect.left) / cell);
-            dragging.gy = Math.floor((e.clientY - rect.top) / cell);
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            dragging.gx = Math.floor((clientX - rect.left) / (rect.width / gridSize));
+            dragging.gy = Math.floor((clientY - rect.top) / (rect.height / gridSize));
             draw();
-        });
+        };
 
-        canvas.addEventListener('mouseup', () => {
+        canvas.addEventListener('mousemove', moveHandler);
+        canvas.addEventListener('touchmove', (e) => { moveHandler(e); e.preventDefault(); }, { passive: false });
+
+        const endDrag = () => {
             if (!dragging) return;
             if (canPlace(dragging.shape, dragging.gx, dragging.gy)) {
                 place(dragging.shape, dragging.gx, dragging.gy);
@@ -243,22 +301,29 @@
             }
             dragging = null;
             draw();
-        });
+        };
+
+        window.addEventListener('mouseup', endDrag);
+        window.addEventListener('touchend', endDrag);
 
         function checkGameOver() {
+            let lost = true;
             for (let p of pieces) {
                 for (let y = 0; y < gridSize; y++) {
                     for (let x = 0; x < gridSize; x++) {
-                        if (canPlace(p, x, y)) return;
+                        if (canPlace(p, x, y)) { lost = false; break; }
                     }
+                    if (!lost) break;
                 }
+                if (!lost) break;
             }
-            finalScore.textContent = score;
-            gameoverUI.style.display = 'block';
+            if (lost) {
+                finalScore.textContent = score;
+                gameoverUI.style.display = 'block';
+            }
         }
 
         init();
     </script>
-
 </body>
 </html>
