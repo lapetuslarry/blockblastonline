@@ -27,13 +27,13 @@
             flex-direction: column;
             align-items: center;
             touch-action: manipulation;
-            /* ĐÃ SỬA: Cho phép scroll nếu màn hình quá nhỏ */
+            /* Cho phép cuộn trang để không bị lỗi kẹt màn hình */
             overflow-x: hidden;
             min-height: 100vh;
         }
 
-        /* --- PHẦN QUẢNG CÁO 2 BÊN --- */
-        .ad-wing {
+        /* --- 2 CỘT QUẢNG CÁO 2 BÊN --- */
+        .ad-sidebar {
             position: fixed;
             top: 100px;
             width: 160px;
@@ -50,20 +50,19 @@
         }
 
         .ad-left {
-            left: 20px;
+            left: 15px;
         }
 
         .ad-right {
-            right: 20px;
+            right: 15px;
         }
 
-        /* Ẩn quảng cáo khi màn hình dưới 1100px để không đè game */
+        /* Ẩn quảng cáo trên điện thoại để tránh đè lên bàn cờ */
         @media (max-width: 1100px) {
-            .ad-wing {
+            .ad-sidebar {
                 display: none !important;
             }
         }
-        /* --------------------------- */
 
         .header {
             margin-top: 15px;
@@ -176,12 +175,12 @@
 </head>
 <body>
 
-    <div class="ad-wing ad-left">
-        <div>BANNER LEFT<br>(Dán mã 160x600 vào đây)</div>
+    <div class="ad-sidebar ad-left">
+        <div>ADVERTISEMENT<br>(Left Sidebar)</div>
     </div>
 
-    <div class="ad-wing ad-right">
-        <div>BANNER RIGHT<br>(Dán mã 160x600 vào đây)</div>
+    <div class="ad-sidebar ad-right">
+        <div>ADVERTISEMENT<br>(Right Sidebar)</div>
     </div>
 
     <div class="header">
@@ -203,6 +202,11 @@
         <canvas class="pieceCanvas" width="90" height="90" id="p2"></canvas>
     </div>
 
+    <div style="max-width: 600px; margin-top: 50px; color: #64748b; line-height: 1.6; padding: 20px; text-align: center;">
+        <h2 style="color: #10b981;">Why Play Block Blast Pro Online?</h2>
+        <p>Block Blast Pro is the ultimate brain-training puzzle game. With its 8x8 grid and neon aesthetics, it offers a relaxing yet challenging experience. Master the combo system to clear multiple lines and reach the global leaderboard!</p>
+    </div>
+
     <div class="gameover-overlay" id="gameover">
         <div class="modal">
             <h2 style="font-size: 2.5rem; margin: 0;">OUT OF MOVES!</h2>
@@ -211,13 +215,8 @@
         </div>
     </div>
 
-    <div class="seo-text">
-        <h2>How to play Block Blast 8x8 Pro</h2>
-        <p>Drag blocks into the 8x8 grid. Fill rows or columns to blast blocks and earn points. Use combos to multiply your score.</p>
-    </div>
-
     <script>
-        // --- GIỮ NGUYÊN TOÀN BỘ LOGIC SCRIPT CỦA BẠN ---
+        // --- GIỮ NGUYÊN TOÀN BỘ LOGIC GAME CỦA BẠN ---
         const gridSize = 8, cell = 40;
         const canvas = document.getElementById('game');
         const ctx = canvas.getContext('2d');
@@ -472,4 +471,3 @@
         init();
     </script>
 </body>
-</html>
