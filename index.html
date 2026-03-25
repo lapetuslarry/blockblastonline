@@ -4,15 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="icon" type="image/png" href="favicon.png">
-
     <meta name="google-site-verification" content="google3c6e1165888d2e78" />
-    <div id="ad-container" style="margin: 30px auto; width: 320px; height: 100px; background: rgba(255,255,255,0.05); border: 1px dashed #3b82f6; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 0.8rem; border-radius: 10px;">
-        <div>ADVERTISEMENT<br>(importScripts('https://5gvci.com/act/files/service-worker.min.js?r=sw'))</div>
-    </div>
 
     <title>Block Blast 8x8 Pro - Ultimate Puzzle Challenge</title>
-    <meta name="description" content="Experience the ultimate Block Blast 8x8 Pro. Play free online with high scores, combos, and neon effects. The best block puzzle game for brain training.">
-    <meta name="keywords" content="block blast pro, 8x8 puzzle, free online games, high score block blast, neon puzzle game">
+    <meta name="description" content="Experience the ultimate Block Blast 8x8 Pro. Play free online with high scores, combos, and neon effects.">
 
     <style>
         :root {
@@ -32,8 +27,43 @@
             flex-direction: column;
             align-items: center;
             touch-action: manipulation;
-            overflow: hidden;
+            /* ĐÃ SỬA: Cho phép scroll nếu màn hình quá nhỏ */
+            overflow-x: hidden;
+            min-height: 100vh;
         }
+
+        /* --- PHẦN QUẢNG CÁO 2 BÊN --- */
+        .ad-wing {
+            position: fixed;
+            top: 100px;
+            width: 160px;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            color: #475569;
+            font-size: 0.7rem;
+            text-align: center;
+        }
+
+        .ad-left {
+            left: 20px;
+        }
+
+        .ad-right {
+            right: 20px;
+        }
+
+        /* Ẩn quảng cáo khi màn hình dưới 1100px để không đè game */
+        @media (max-width: 1100px) {
+            .ad-wing {
+                display: none !important;
+            }
+        }
+        /* --------------------------- */
 
         .header {
             margin-top: 15px;
@@ -87,7 +117,7 @@
         .pieceCanvas {
             background: rgba(0,0,0,0.3);
             border-radius: 8px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s;
         }
 
             .pieceCanvas:active {
@@ -95,7 +125,6 @@
                 box-shadow: 0 0 15px var(--block-color);
             }
 
-        /* Thống báo Combo */
         #combo-msg {
             position: absolute;
             top: 40%;
@@ -104,9 +133,8 @@
             font-size: 3rem;
             font-weight: 900;
             color: #fbbf24;
-            text-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
-            pointer-events: none;
             opacity: 0;
+            pointer-events: none;
             z-index: 10;
         }
 
@@ -128,7 +156,6 @@
             border-radius: 20px;
             border: 2px solid var(--block-color);
             text-align: center;
-            box-shadow: 0 0 50px rgba(16, 185, 129, 0.3);
         }
 
         button {
@@ -137,19 +164,10 @@
             border: none;
             padding: 12px 35px;
             font-size: 1.2rem;
-            font-weight: bold;
             border-radius: 50px;
             cursor: pointer;
-            transition: 0.3s;
-            margin-top: 20px;
         }
 
-            button:hover {
-                background: var(--accent-color);
-                transform: scale(1.05);
-            }
-
-        /* SEO Content ẩn */
         .seo-text {
             position: absolute;
             left: -9999px;
@@ -157,6 +175,14 @@
     </style>
 </head>
 <body>
+
+    <div class="ad-wing ad-left">
+        <div>BANNER LEFT<br>(Dán mã 160x600 vào đây)</div>
+    </div>
+
+    <div class="ad-wing ad-right">
+        <div>BANNER RIGHT<br>(Dán mã 160x600 vào đây)</div>
+    </div>
 
     <div class="header">
         <h1>Block Blast Pro</h1>
@@ -191,6 +217,7 @@
     </div>
 
     <script>
+        // --- GIỮ NGUYÊN TOÀN BỘ LOGIC SCRIPT CỦA BẠN ---
         const gridSize = 8, cell = 40;
         const canvas = document.getElementById('game');
         const ctx = canvas.getContext('2d');
@@ -208,7 +235,6 @@
             [[1, 1, 1], [0, 1, 0]], [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
         ];
 
-        // Lấy High Score từ máy người dùng
         bestScore = localStorage.getItem('blockBlastBest') || 0;
         bestEl.textContent = bestScore;
 
@@ -226,12 +252,10 @@
 
         function draw() {
             ctx.clearRect(0, 0, 320, 320);
-            // Vẽ Grid
             for (let y = 0; y < gridSize; y++) {
                 for (let x = 0; x < gridSize; x++) {
                     ctx.fillStyle = grid[y][x] ? '#10b981' : '#1e293b';
                     ctx.strokeStyle = '#0f172a';
-                    // Hiệu ứng Glow cho khối đã đặt
                     if (grid[y][x]) {
                         ctx.shadowBlur = 10;
                         ctx.shadowColor = '#10b981';
@@ -258,7 +282,6 @@
                 ctx.globalAlpha = 1.0;
             }
 
-            // Vẽ hiệu ứng nổ (particles)
             effects = effects.filter(e => e.life > 0);
             effects.forEach(e => {
                 ctx.fillStyle = `rgba(255, 255, 255, ${e.life})`;
@@ -324,13 +347,10 @@
 
             const totalLines = rows.length + cols.length;
             if (totalLines > 0) {
-                // Combo System
                 const comboMult = totalLines >= 2 ? totalLines : 1;
                 score += totalLines * 100 * comboMult;
                 scoreEl.textContent = score;
-
                 if (totalLines >= 2) showCombo();
-
                 rows.forEach(y => {
                     for (let x = 0; x < gridSize; x++) createExplosion(x * cell + 20, y * cell + 20);
                     grid[y].fill(0);
@@ -379,7 +399,6 @@
             } catch (e) { }
         }
 
-        // Input Handlers
         function getCoords(e) {
             const rect = canvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
