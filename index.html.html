@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Block Puzzle Pro</title>
+  <style>
+    body { font-family: Arial; text-align: center; background: #111; color: white; }
+    canvas { background: #222; margin-top: 20px; border-radius: 8px; }
+    .pieces { display:flex; justify-content:center; gap:12px; margin-top:10px; }
+    .pieceCanvas { background:#1b1b1b; border-radius:6px; }
+  </style>
+</head>
+<body>
+  <h1>Block Puzzle</h1>
+  <div>Score: <span id="score">0</span></div>
+  <canvas id="game" width="300" height="300"></canvas>
+  <div class="pieces">
+    <canvas class="pieceCanvas" width="90" height="90" id="p0"></canvas>
+    <canvas class="pieceCanvas" width="90" height="90" id="p1"></canvas>
+    <canvas class="pieceCanvas" width="90" height="90" id="p2"></canvas>
+  </div>
+
+<script>
+const gridSize=10, cell=30;
+const canvas=document.getElementById('game');
+const ctx=canvas.getContext('2d');
+const scoreEl=document.getElementById('score');
+
+let grid, score, pieces, dragging=null;
+
+const SHAPES=[[[1]],[[1,1]],[[1],[1]],[[1,1,1]],[[1],[1],[1]],[[1,1],[1,1]],[[1,0],[1,1]],[[0,1],[1,1]]];
+
+function randShape(){return JSON.parse(JSON.stringify(SHAPES[Math.floor(Math.random()*SHAPES.length)]));}
+
+function init(){
+  grid=Array.from({length:gridSize},()=>Array(gridSize).fill(0));
+  score=0; scoreEl.textContent=score;
+  pieces=[randShape(),randShape(),randShape()];
+  draw(); drawPieces();
+}
+
+function draw(){
+  ctx.clearRect(0,0,300,300);
+  for(let y=0;y<gridSize;y++){
+    for(let x=0;x<gridSize;x++){
+      ctx.strokeStyle='#555';
+      ctx.strokeRect(x*cell,y*cell,cell,cell);
+      if(grid[y][x]){
+        ctx.fillStyle='#4caf50';
+        ctx.fillRect(x*cell,y*cell,cell,cell);
+      }
+    }
+  }
+}
+
+function drawPieceOn(ctxp,shape){
+  ctxp.clearRect(0,0,90,90);
+  const s=20;
+  for(let y=0;y<shape.length;y++){
+    for(let x=0;x<shape[0].length;x++){
+      if(shape[y][x]){
+        ctxp.fillStyle='#4caf50';
+        ctxp.fillRect(x*s+20,y*s+20,s,s);
+      }
+    }
+  }
+}
+
+function drawPieces(){
+  for(let i=0;i<3;i++){
+    drawPieceOn(document.getElementById('p'+i).getContext('2d'),pieces[i]);
+  }
+}
+
+function canPlace(shape,gx,gy){
+  for(let y=0;y<shape.length;y++){
+    for(let x=0;x<shape[0].length;x++){
+      if(shape[y][x]){
+        let nx=gx+x, ny=gy+y;
+        if(nx<0||ny<0||nx>=gridSize||ny>=gridSize||grid[ny][nx]) return false;
+      }
+    }
+  }
+  return true;
+}
+
+function place(shape,gx,gy){
+  for(let y=0;y<shape.length;y++){
+    for(let x=0;x<shape[0].length;x++){
+      if(shape[y][x]) grid[gy+y][gx+x]=1;
+    }
+  }
+  clearLines();
+}
+
+function clearLines(){
+  let cleared=0;
+  for(let y=0;y<gridSize;y++){
+    if(grid[y].every(v=>v===1)){grid[y].fill(0); cleared++;}
+  }
+  for(let x=0;x<gridSize;x++){
+    let full=true;
+    for(let y=0;y<gridSize;y++) if(!grid[y][x]) full=false;
+    if(full){for(let y=0;y<gridSize;y++) grid[y][x]=0; cleared++;}
+  }
+  if(cleared){score+=cleared*10; scoreEl.textContent=score;}
+}
+
+// DRAG
+let selectedIndex=null;
+for(let i=0;i<3;i++){
+  const el=document.getElementById('p'+i);
+  el.addEventListener('mousedown',()=>{selectedIndex=i;});
+}
+
+canvas.addEventListener('mouseup',(e)=>{
+  if(selectedIndex===null) return;
+  const rect=canvas.getBoundingClientRect();
+  const gx=Math.floor((e.clientX-rect.left)/cell);
+  const gy=Math.floor((e.clientY-rect.top)/cell);
+
+  if(pieces[selectedIndex] && canPlace(pieces[selectedIndex],gx,gy)){
+    place(pieces[selectedIndex],gx,gy);
+    pieces[selectedIndex]=randShape();
+    draw(); drawPieces();
+    checkGameOver();
+  }
+  selectedIndex=null;
+});
+
+function checkGameOver(){
+  for(let p of pieces){
+    for(let y=0;y<gridSize;y++){
+      for(let x=0;x<gridSize;x++){
+        if(canPlace(p,x,y)) return;
+      }
+    }
+  }
+  alert('Game Over! Score: '+score);
+  init();
+}
+
+init();
+</script>
+</body>
+</html>
