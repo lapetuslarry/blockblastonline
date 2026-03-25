@@ -2,14 +2,8 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Block Blast Online - Chơi game miễn phí</title>
-
-    <!-- FAVICON -->
+    <title>Block Blast 8x8 Pro</title>
     <link rel="icon" type="image/png" href="favicon.png">
-
-    <!-- SEO -->
-    <meta name="description" content="Chơi Block Blast online miễn phí. Game xếp hình gây nghiện, chơi ngay trên web.">
-    <meta name="keywords" content="block blast, game xếp hình, game online">
 
     <style>
         body {
@@ -42,26 +36,20 @@
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%,-50%);
             background: #222;
             padding: 20px;
             border-radius: 10px;
             display: none;
         }
-
-        button {
-            padding: 10px 20px;
-            margin-top: 10px;
-        }
     </style>
 </head>
-
 <body>
 
-    <h1>Block Blast Online</h1>
+    <h1>Block Blast 8x8</h1>
     <div>Score: <span id="score">0</span></div>
 
-    <canvas id="game" width="300" height="300"></canvas>
+    <canvas id="game" width="320" height="320"></canvas>
 
     <div class="pieces">
         <canvas class="pieceCanvas" width="90" height="90" id="p0"></canvas>
@@ -75,10 +63,8 @@
         <button onclick="init()">Chơi lại</button>
     </div>
 
-    <p>Chơi Block Blast online miễn phí - game xếp hình gây nghiện.</p>
-
     <script>
-        const gridSize = 10, cell = 30;
+        const gridSize = 8, cell = 40;
         const canvas = document.getElementById('game');
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
@@ -87,8 +73,17 @@
 
         let grid, score, pieces;
         let dragging = null;
+        let effects = [];
 
-        const SHAPES = [[[1]], [[1, 1]], [[1], [1]], [[1, 1, 1]], [[1], [1], [1]], [[1, 1], [1, 1]], [[1, 0], [1, 1]], [[0, 1], [1, 1]]];
+        // thêm shape 3x3
+        const SHAPES = [
+            [[1]], [[1, 1]], [[1], [1]], [[1, 1, 1]], [[1], [1], [1]],
+            [[1, 1], [1, 1]], [[1, 0], [1, 1]], [[0, 1], [1, 1]],
+            [[1, 1, 1, 1]], [[1], [1], [1], [1]],
+            [[1, 1, 0], [0, 1, 1]], [[0, 1, 1], [1, 1, 0]],
+            [[1, 1, 1], [0, 1, 0]], [[0, 1, 0], [1, 1, 1]],
+            [[1, 1, 1], [1, 1, 1], [1, 1, 1]] // 3x3 full
+        ];
 
         function randShape() { return JSON.parse(JSON.stringify(SHAPES[Math.floor(Math.random() * SHAPES.length)])); }
 
@@ -101,7 +96,8 @@
         }
 
         function draw() {
-            ctx.clearRect(0, 0, 300, 300);
+            ctx.clearRect(0, 0, 320, 320);
+
             for (let y = 0; y < gridSize; y++) {
                 for (let x = 0; x < gridSize; x++) {
                     ctx.strokeStyle = '#555';
@@ -113,17 +109,25 @@
                 }
             }
 
+            // preview
             if (dragging) {
                 const { shape, gx, gy } = dragging;
+                const valid = canPlace(shape, gx, gy);
                 for (let y = 0; y < shape.length; y++) {
                     for (let x = 0; x < shape[0].length; x++) {
                         if (shape[y][x]) {
-                            ctx.fillStyle = 'rgba(76,175,80,0.5)';
+                            ctx.fillStyle = valid ? 'rgba(76,175,80,0.5)' : 'rgba(255,0,0,0.5)';
                             ctx.fillRect((gx + x) * cell, (gy + y) * cell, cell, cell);
                         }
                     }
                 }
             }
+
+            // hiệu ứng nổ
+            effects.forEach(e => {
+                ctx.fillStyle = 'rgba(255,255,0,' + e.alpha + ')';
+                ctx.fillRect(e.x * cell, e.y * cell, cell, cell);
+            });
         }
 
         function drawPieceOn(ctxp, shape) {
@@ -163,20 +167,59 @@
                     if (shape[y][x]) grid[gy + y][gx + x] = 1;
                 }
             }
+            playSound(200);
             clearLines();
         }
 
         function clearLines() {
-            let cleared = 0;
+            let clearedCells = [];
+
             for (let y = 0; y < gridSize; y++) {
-                if (grid[y].every(v => v === 1)) { grid[y].fill(0); cleared++; }
+                if (grid[y].every(v => v === 1)) {
+                    for (let x = 0; x < gridSize; x++) clearedCells.push({ x, y });
+                    grid[y].fill(0);
+                }
             }
+
             for (let x = 0; x < gridSize; x++) {
                 let full = true;
                 for (let y = 0; y < gridSize; y++) if (!grid[y][x]) full = false;
-                if (full) { for (let y = 0; y < gridSize; y++) grid[y][x] = 0; cleared++; }
+                if (full) {
+                    for (let y = 0; y < gridSize; y++) {
+                        clearedCells.push({ x, y });
+                        grid[y][x] = 0;
+                    }
+                }
             }
-            if (cleared) { score += cleared * 10; scoreEl.textContent = score; }
+
+            if (clearedCells.length) {
+                score += clearedCells.length * 5;
+                scoreEl.textContent = score;
+
+                // hiệu ứng nổ
+                effects = clearedCells.map(c => ({ x: c.x, y: c.y, alpha: 1 }));
+                animateEffects();
+                playSound(500);
+            }
+        }
+
+        function animateEffects() {
+            let interval = setInterval(() => {
+                effects.forEach(e => e.alpha -= 0.1);
+                effects = effects.filter(e => e.alpha > 0);
+                draw();
+                if (effects.length === 0) clearInterval(interval);
+            }, 30);
+        }
+
+        function playSound(freq) {
+            const ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctxAudio.createOscillator();
+            osc.type = 'square';
+            osc.frequency.value = freq;
+            osc.connect(ctxAudio.destination);
+            osc.start();
+            setTimeout(() => osc.stop(), 100);
         }
 
         for (let i = 0; i < 3; i++) {
